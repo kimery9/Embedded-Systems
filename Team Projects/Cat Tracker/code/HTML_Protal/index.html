@@ -1,0 +1,258 @@
+<!-- Quest 3: Cat Tracker
+BU ENG EC 444 Spring 2023
+Team 2: John Culley, Ananth Sanjay, Jeffrey Zhang, Kai Imery
+03/21/2023  -->
+
+<!-- Client-side code -->
+
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <title>Cat Track Protal</title>
+  <!-- Add jQuery library -->
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+  <script type="text/javascript" src="client.js"></script>
+</head>
+
+<body>
+  <h1>Use the following checkbox to control the LED:</h1>
+  <form>
+    <input style="width: 30px; height: 30px" type="checkbox" class="btn" id="btn1">
+    <label style="font-size:40px; color:red" for="btn1" id="btn1l" >OFF</label>
+  </form>
+  <h1></h1>
+  <div id="wrapper">
+    <div id="chart-area">
+
+    </div>
+    <div id="chart-bar">
+
+    </div>
+
+    <script>
+      var lastZoom = null;
+      $.ajax({
+        type: "GET",
+        url: "data.json",
+        dataType: "JSON",
+        success: function (data) { processdata(data); }
+      });
+
+      function processdata(data) {
+        var point = data;
+        var options1 = {
+          chart: {
+            id: "chart1",
+            type: "area",
+            height: 230,
+            foreColor: "#000000",
+            toolbar: {
+              autoSelected: 'pen',
+              show: false
+            },
+          },
+          title: {
+            text: "Live Tempature Monitor",
+            align: 'center',
+            margin: 10,
+            offsetX: 0,
+            offsetY: 0,
+            floating: false,
+            style: {
+              fontSize: '16px',
+              fontWeight: 'bold',
+              fontFamily: undefined,
+              color: '#263238'
+            },
+          },
+          colors: ["#00BAEC"],
+          stroke: {
+            width: 3
+          },
+          grid: {
+            borderColor: "#555",
+            clipMarkers: false,
+            yaxis: {
+              lines: {
+                show: false
+              }
+            }
+          },
+          dataLabels: {
+            enabled: false
+          },
+          fill: {
+            gradient: {
+              enabled: true,
+              opacityFrom: 0.55,
+              opacityTo: 0
+            }
+          },
+          markers: {
+            size: 2,
+            colors: ["#000524"],
+            strokeColor: "#00BAEC",
+            strokeWidth: 2
+          },
+          series: [
+            {
+              data: point.datapoint
+            }
+          ],
+          tooltip: {
+            theme: "light"
+          },
+          xaxis: {
+            type: "datetime",
+            title: {
+              text: "Time",
+              rotate: -90,
+              offsetX: 0,
+              offsetY: 0,
+              style: {
+                color: "#000000",
+                fontSize: '12px',
+                fontFamily: 'Helvetica, Arial, sans-serif',
+                fontWeight: 600,
+                cssClass: 'apexcharts-yaxis-title',
+              },
+            },
+          },
+          yaxis: {
+            min: 0,
+            tickAmount: 4,
+            title: {
+              text: "Tempature(C)",
+              rotate: -90,
+              offsetX: 0,
+              offsetY: 0,
+              style: {
+                color: "#000000",
+                fontSize: '12px',
+                fontFamily: 'Helvetica, Arial, sans-serif',
+                fontWeight: 600,
+                cssClass: 'apexcharts-yaxis-title',
+              },
+            },
+          }
+        };
+
+
+        var options2 = {
+          chart: {
+            id: "chart2",
+            height: 130,
+            type: "bar",
+            foreColor: "#000000",
+            brush: {
+              target: "chart1",
+              enabled: true
+            },
+            selection: {
+              enabled: true,
+              fill: {
+                color: "#C5C5C5",
+                opacity: 0.7
+              },
+              xaxis: {
+                min: point.datapoint[0][0],
+                max: point.datapoint[point.datapoint.length - 1][0]
+              }
+            }
+          },
+          colors: ["#FF0080"],
+          series: [
+            {
+              data: point.datapoint
+            }
+          ],
+          stroke: {
+            width: 2
+          },
+          grid: {
+            borderColor: "#444"
+          },
+          markers: {
+            size: 0
+          },
+          xaxis: {
+            type: "datetime",
+            tooltip: {
+              enabled: false
+            }
+          },
+          yaxis: {
+            tickAmount: 2
+          }
+        };
+
+        var chart1 = new ApexCharts(document.querySelector("#chart-area"), options1);
+
+        chart1.render();
+
+        var chart2 = new ApexCharts(document.querySelector("#chart-bar"), options2);
+
+        chart2.render();
+
+        function updateSeries() {
+          $.ajax({
+            type: "GET",
+            url: "data.json",
+            dataType: "JSON",
+            success: function (data) {
+              var newpoint = data;
+              var newData = newpoint.datapoint;
+
+              // Check if the selection is at the end of the chart
+              var isSelectionAtEnd = Math.round(chart1.w.globals.maxX) === chart2.w.globals.maxX;
+              var isSelectionAtStart = Math.round(chart1.w.globals.minX) === chart2.w.globals.minX;
+              var range = chart1.w.globals.maxX - chart1.w.globals.minX;
+
+              var lastDataIndex = chart1.w.config.series[0].data.length - 1;
+              // Check if there is new data
+              if (newData.length > lastDataIndex + 1) {
+                // Get the new data points
+                var appendedData = newData.slice(lastDataIndex + 1);
+
+                // Append new data points without resetting the zoom
+                chart1.appendData([
+                  {
+                    data: appendedData,
+                  },
+                ]);
+                chart2.updateSeries([
+                  {
+                    name: "series1",
+                    data: newData
+                  }
+                ]);
+                
+                // If the selection is at the end of the chart, move the chart to the new data points
+                if (isSelectionAtEnd) {
+                  var newMax = chart2.w.globals.maxX;
+                  if (isSelectionAtStart) {
+                    chart1.zoomX(chart2.w.globals.minX, newMax);
+                  }
+                  else {
+                    var newMin = newMax - range;
+                    chart1.zoomX(newMin, newMax);
+                  }
+
+                }
+              }
+            },
+          });
+        }
+
+        setInterval(() => {
+          updateSeries();
+        }, 5000);
+      }
+
+    </script>
+</body>
+
+</html>

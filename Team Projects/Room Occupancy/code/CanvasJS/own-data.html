@@ -1,0 +1,162 @@
+<!-- 7. Module to read data from your host file and plot
+********************************************************************************** -->
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="refresh" content="1">
+<script type="text/javascript" src="https://canvasjs.com/assets/script/jquery-1.11.1.min.js"></script>
+<script type="text/javascript">
+
+$(document).ready(function () {
+
+    $.ajax({
+        type: "GET",
+        url: "data.csv",
+        dataType: "text",
+        success: function (data) { processData(data); }
+    });
+
+    function processData(allText) {
+        var allLinesArray = allText.split('\n');
+        if (allLinesArray.length > 0) {
+            var dataPoints1 = [];
+            var dataPoints2 = [];
+            var dataPoints3 = [];
+            var dataPoints4 = [];
+            var dataPoints5 = [];
+
+            for (var i = allLinesArray.length - 401; i <= allLinesArray.length - 1; i++) {
+                var rowData = allLinesArray[i].split(',');
+                if(rowData && rowData.length > 1) {
+                    if (rowData[1] == "ultrasonic") 
+                        dataPoints1.push({ x: parseFloat(rowData[0]), y: parseFloat(rowData[2]) });
+                    if (rowData[1] == "thermistor") 
+                        dataPoints2.push({ x: parseFloat(rowData[0]), y: parseFloat(rowData[2]) });
+                    if (rowData[1] == "solar") 
+                        dataPoints3.push({ x: parseFloat(rowData[0]), y: parseFloat(rowData[2]) });
+                    if (rowData[1] == "IR") 
+                        dataPoints4.push({ x: parseFloat(rowData[0]), y: parseFloat(rowData[2]) });
+                    if (rowData[1] == "LED") 
+                        dataPoints5.push({ x: parseFloat(rowData[0]), y: parseInt(rowData[2]) });
+                }
+            }
+
+            chart.options.data[0].dataPoints = dataPoints1;
+            chart.options.data[1].dataPoints = dataPoints2;
+            chart.options.data[2].dataPoints = dataPoints3;
+            chart.options.data[3].dataPoints = dataPoints4;
+            chart2.options.data[0].dataPoints = dataPoints5;
+            chart.render();
+            chart2.render();
+            setTimeout(function(){processData()}, 1000);
+        }
+    }
+
+            
+    var chart = new CanvasJS.Chart("chartContainer1", {
+        animationEnabled: false,
+        title: {
+            text: "Readings from sensors"
+        },
+        axisX: {
+		    title: "Running time",
+            suffix: " s"
+        },
+        axisY: [
+            {
+                title: "Voltage",
+                suffix: " V"
+            },
+            {
+                title: "Temperature",
+                suffix: " C"
+            }
+
+        ],
+        axisY2: [
+            {
+                title: "Distance from ultrasonic",
+                suffix: " m"
+            },
+            {
+                title: "Distance from IR",
+                suffix: " m"
+            }
+        ],
+        toolTip:{
+            shared: true
+        },
+        data: [
+        {
+            name: "ultrasonic",
+            type: "spline",
+            axisYType: "secondary",
+            axisYIndex: 0,
+            yValueFormatString: "#0.## m",
+            showInLegend: true,
+            dataPoints: []
+        },
+        {
+            name: "thermistor",
+            type: "spline",
+            axisYIndex: 1,
+            yValueFormatString: "#0.## C",
+            showInLegend: true,
+            dataPoints: []
+        },
+        {
+            name: "solar",
+            type: "spline",
+            axisYIndex: 0,
+            yValueFormatString: "#0.## V",
+            showInLegend: true,
+            dataPoints: []
+        },
+        {
+            name: "IR",
+            type: "spline",
+            axisYType: "secondary",
+            axisYIndex: 1,
+            yValueFormatString: "#0.## m",
+            showInLegend: true,
+            dataPoints: []
+        }
+        ]
+    });
+
+    var chart2 = new CanvasJS.Chart("chartContainer2", {
+        animationEnabled: false,
+        title: {
+            text: "Occupancy Result"
+        },
+        axisX: {
+		    title: "Running time",
+            suffix: " s"
+        },
+        axisY: [
+            {
+                title: "Occupancy"
+            }
+        ],
+        toolTip:{
+            shared: true
+        },
+        data: [
+        {
+            name: "Occupancy",
+            type: "line",
+            axisYIndex: 0,
+            showInLegend: true,
+            dataPoints: []
+        }
+        ]
+    });
+});
+</script>
+<script type="text/javascript" src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>
+</head>
+<body>
+<div id="chartContainer1" style="height: 370px; max-width: 1260px; margin: 0px auto;"></div>
+<div id="chartContainer2" style="height: 370px; max-width: 990px; margin: 0px auto;"></div>
+</body>
+</html>

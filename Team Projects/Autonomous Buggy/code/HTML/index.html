@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Buggy Control</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        /* Dark mode styles */
+        body {
+            background-color: #222;
+            color: #ADD8E6;
+        }
+
+        /* Light mode styles */
+        @media (prefers-color-scheme: light) {
+            body {
+                background-color: #fff;
+                color: #222;
+            }
+        }
+    </style>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+    <script type="text/javascript" src="client.js"></script>
+    <script>
+        $.ajax({
+            type: "GET",
+            url: "data.json",
+            dataType: "JSON",
+            success: function (data) { renderTable(data); }
+        });
+
+        function renderTable(datalog) {
+            var table = document.getElementById("datalog-table");
+            table.innerHTML = "";
+            var header = table.insertRow(0);
+            header.insertCell(0).innerHTML = "<b>Timestamp</b>";
+            header.insertCell(1).innerHTML = "<b>Action</b>";
+            for (var i = 0; i < datalog.length; i++) {
+                var row = table.insertRow(i + 1);
+                row.insertCell(0).innerHTML = "StoC1:  " + datalog[i].StoC1;
+                row.insertCell(1).innerHTML = "C1toC2:  " + datalog[i].C1toC2;
+                row.insertCell(2).innerHTML = "C2toC3:  " + datalog[i].C2toC3;
+                row.insertCell(3).innerHTML = "C3toC4:  " + datalog[i].C3toC4;
+                row.insertCell(4).innerHTML = "TOTAL:  " + datalog[i].Total;
+            }
+        }
+    </script>
+</head>
+
+<body>
+
+    <h1>Buggy Control</h1>
+
+    <p>Press 'W', 'S', 'D', 'A' keys to control the buggy and 'Q' to stop.</p>
+    <p>Press '1','2','3' for speed controls</p>
+
+    <form>
+        <input style="display:none;" type="text" id="key-input" class="btn">
+        <input style="width: 30px; height: 30px" type="checkbox" class="btn" id="btn1">
+        <label style="font-size:25px; color:red" for="btn1" id="btn1l">OFF</label>
+    </form>
+    <img src="http://192.168.1.15:8000/stream.mjpg">
+    <table id="datalog-table"></table>
+
+</body>
+
+</html>
